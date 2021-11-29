@@ -13,7 +13,7 @@ data "terraform_remote_state" "networking" {
 }
 
 locals {
-  pulled_subnets = tolist(terraform_remote_state.networking.outputs.subnets)
+  pulled_subnets = tolist(data.terraform_remote_state.networking.outputs.subnets)
 }
 
 
