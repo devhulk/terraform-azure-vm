@@ -17,7 +17,7 @@ locals {
   first_subnet = element(local.pulled_subnets, 0)
   second_subnet = element(local.pulled_subnets, 1)
   third_subnet = element(local.pulled_subnets, 2)
-  subnet_ids = tolist(local.first_subnet.id, local.second_subnet.id, local.third_subnet.id)
+  subnet_ids = tolist([local.first_subnet.id, local.second_subnet.id, local.third_subnet.id])
 }
 
 
