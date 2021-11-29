@@ -1,6 +1,50 @@
 provider "azurerm" {
-    # The "feature" block is required for AzureRM provider 2.x. 
-    # If you are using version 1.x, the "features" block is not allowed.
-    version = "~>2.0"
-    features {}
+  features {}
+}
+
+data "terraform_remote_state" "networking" {
+  backend = "remote"
+  config = {
+    organization = var.org
+    workspaces = {
+      name = var.source_workspace
+    }
+  }
+}
+
+
+resource "azurerm_network_interface" "example" {
+  name                = "example-nic"
+  location            = data.terraform_remote_state.networking.outputs.resource_group_location
+  resource_group_name = data.terraform_remote_state.networking.outputs.resource_group_name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = element(data.terraform_remote_state.networking.outputs.subnets, 0)  # azurerm_subnet.example.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_windows_virtual_machine" "example" {
+  name                = "example-machine"
+  resource_group_name = data.terraform_remote_state.networking.outputs.resource_group_name
+  location            = data.terraform_remote_state.networking.outputs.resource_group_location
+  size                = "Standard_F2"
+  admin_username      = "adminuser"
+  admin_password      = var.vm_pw
+  network_interface_ids = [
+    azurerm_network_interface.example.id,
+  ]
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2016-Datacenter"
+    version   = "latest"
+  }
 }
