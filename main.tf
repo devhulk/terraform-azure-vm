@@ -14,6 +14,10 @@ data "terraform_remote_state" "networking" {
 
 locals {
   pulled_subnets = tolist(data.terraform_remote_state.networking.outputs.subnets)
+  first_subnet = element(local.pulled_subnets, 0)
+  second_subnet = element(local.pulled_subnets, 1)
+  third_subnet = element(local.pulled_subnets, 2)
+  subnet_ids = tolist(local.first_subnet.id, local.second_subnet.id, local.third_subnet.id)
 }
 
 
@@ -24,7 +28,7 @@ resource "azurerm_network_interface" "example" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = element(local.pulled_subnets, 0)  # azurerm_subnet.example.id
+    subnet_id                     = element(local.subnet_ids, 0)  # azurerm_subnet.example.id
     private_ip_address_allocation = "Dynamic"
   }
 }
